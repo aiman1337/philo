@@ -6,7 +6,7 @@
 /*   By: ahouass <ahouass@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/13 17:31:26 by ahouass           #+#    #+#             */
-/*   Updated: 2025/05/15 17:52:16 by ahouass          ###   ########.fr       */
+/*   Updated: 2025/05/16 18:36:18 by ahouass          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,30 +21,30 @@
 
 typedef struct s_data
 {
-    int             num_of_philos;
-    size_t          time_to_die;
-    size_t          time_to_eat;
-    size_t          time_to_sleep;
-    size_t          num_times_to_eat;
-    pthread_mutex_t *forks;
-    pthread_mutex_t print_mutex;
-    unsigned long   time_start;
-    int             death;
-    pthread_mutex_t death_mutex;
-    pthread_mutex_t meal_mutex;  // Add mutex for meal time protection
-    struct s_philo  *philos;
-    int             all_ate;     // Flag to check if all ate enough
+	int             num_of_philos;
+	size_t          time_to_die;
+	size_t          time_to_eat;
+	size_t          time_to_sleep;
+	size_t          num_times_to_eat;
+	pthread_mutex_t *forks;
+	pthread_mutex_t print_mutex;
+	unsigned long   time_start;
+	int             death;
+	pthread_mutex_t death_mutex;
+	pthread_mutex_t meal_mutex;
+	struct s_philo  *philos;
+	int             all_ate;
 } t_data;
 
 typedef struct s_philo
 {
-    int             id;
-    int             meals_count;
-    unsigned long   last_meal_time;
-    pthread_t       thread;
-    pthread_mutex_t *left_fork;
-    pthread_mutex_t *right_fork;
-    t_data         *data;
+	int             id;
+	int             meals_count;
+	unsigned long   last_meal_time;
+	pthread_t       thread;
+	pthread_mutex_t *left_fork;
+	pthread_mutex_t *right_fork;
+	t_data			*data;
 } t_philo;
 
 #endif
