@@ -6,7 +6,7 @@
 /*   By: ahouass <ahouass@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/15 11:06:06 by ahouass           #+#    #+#             */
-/*   Updated: 2025/05/17 16:23:51 by ahouass          ###   ########.fr       */
+/*   Updated: 2025/05/17 21:51:35 by ahouass          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -180,7 +180,11 @@ void	*philo_life(void *arg)
 	
 		ft_print_state(philo, "is eating");
 		ft_usleep(philo->data->time_to_eat);
+		
+		pthread_mutex_lock(&philo->data->meal_mutex);
 		philo->meals_count++;
+		pthread_mutex_unlock(&philo->data->meal_mutex);
+		
 		pthread_mutex_unlock(philo->left_fork);
 		pthread_mutex_unlock(philo->right_fork);
 	
@@ -196,8 +200,10 @@ void	*check_simulation(void *arg)
 {
 	int		i;
 	t_data	*data;
+	int		all_ate;
 
 	i = 0;
+	all_ate = 1;
 	data = (t_data *)arg;
 	while (1)
 	{
@@ -216,9 +222,22 @@ void	*check_simulation(void *arg)
 				pthread_mutex_unlock(&data->print_mutex);
 				return NULL;
 			}
+			if (data->num_times_to_eat != -1 && data->philos[i].meals_count < data->num_times_to_eat)
+			{
+				all_ate = 0;
+			}
 			pthread_mutex_unlock(&data->meal_mutex);
 			i++;
 		}
+		pthread_mutex_lock(&data->death_mutex);
+		if (data->num_times_to_eat != -1 && all_ate)
+		{
+			data->death = 1;
+			data->all_ate = 1;
+			pthread_mutex_unlock(&data->death_mutex);
+			return NULL;
+		}
+		pthread_mutex_unlock(&data->death_mutex);
 	}
 	return NULL;
 }
