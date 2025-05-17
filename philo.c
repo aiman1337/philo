@@ -6,13 +6,11 @@
 /*   By: ahouass <ahouass@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/13 17:31:47 by ahouass           #+#    #+#             */
-/*   Updated: 2025/05/16 15:14:19 by ahouass          ###   ########.fr       */
+/*   Updated: 2025/05/17 19:20:05 by ahouass          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philo.h"
-
-
 
 unsigned long ft_get_time()
 {
@@ -139,8 +137,9 @@ void *philo_life(void *arg)
 	ft_print_mutex("is thinking", philo->data, philo);
 	
 	// Stagger philosopher start times to avoid deadlock
-	if (philo->id % 2 == 0)
-		ft_usleep(philo->data->time_to_eat / 2, philo->data);
+	if (philo->id % 2 == 1)
+			ft_usleep(philo->data->time_to_eat / 2, philo->data);
+		// usleep(500);
 	
 	while (1)
 	{
@@ -179,7 +178,6 @@ void *philo_life(void *arg)
 		
 		ft_print_mutex("is thinking", philo->data, philo);
 	}
-	
 	return NULL;
 }
 
@@ -293,7 +291,6 @@ int main(int ac, char **av)
 		ft_usleep(data.time_to_die + 10, &data);
 		pthread_mutex_lock(&data.print_mutex);
 		printf("%lu %d died\n", ft_get_time() - data.time_start, 1);
-		// ft_print_mutex("died", &data, philo);
 		pthread_mutex_unlock(&data.print_mutex);
 		pthread_join(philo[0].thread, NULL);
 	}
