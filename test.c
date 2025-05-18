@@ -6,7 +6,7 @@
 /*   By: ahouass <ahouass@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/15 11:06:06 by ahouass           #+#    #+#             */
-/*   Updated: 2025/05/18 21:38:55 by ahouass          ###   ########.fr       */
+/*   Updated: 2025/05/18 21:43:23 by ahouass          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,7 +70,7 @@ int ft_check_args(int ac, char **av)
 		return 0;
 	}
 	i = 1;
-	while (i < ac)
+	while (i < ac && i != 5)
 	{
 		if (ft_atoi(av[i]) <= 0 || !is_number(av[i]))
 		{
@@ -78,6 +78,14 @@ int ft_check_args(int ac, char **av)
 			return 0;
 		}
 		i++;
+	}
+	if (ac == 6)
+	{
+		if (!is_number(av[i]))
+		{
+			printf("Not valid arguments\n");
+			return 0;
+		}
 	}
 	return 1;
 }
