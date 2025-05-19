@@ -6,7 +6,7 @@
 /*   By: ahouass <ahouass@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/13 17:31:26 by ahouass           #+#    #+#             */
-/*   Updated: 2025/05/16 18:36:18 by ahouass          ###   ########.fr       */
+/*   Updated: 2025/05/19 13:00:58 by ahouass          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <sys/time.h>
+#include <limits.h>
 
 typedef struct s_data
 {
