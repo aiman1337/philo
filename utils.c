@@ -5,96 +5,100 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: ahouass <ahouass@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/05/20 11:07:15 by ahouass           #+#    #+#             */
-/*   Updated: 2025/05/20 11:29:51 by ahouass          ###   ########.fr       */
+/*   Created: 2025/05/28 22:18:14 by ahouass           #+#    #+#             */
+/*   Updated: 2025/05/28 22:19:07 by ahouass          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "philo.h"
+# include "philo.h"
 
-void	ft_usleep(long time, t_data *data)
+long ft_atoi(const char *str)
 {
-	long	date;
+	int i;
+	int sign;
+		long result;
 
-	date = ft_get_time();
-	while (1)
+	i = 0;
+	sign = 1;
+	result = 0;
+
+	while (str[i] == ' ' || (str[i] >= 9 && str[i] <= 13))
+		i++;
+	if (str[i] == '-')
 	{
-		pthread_mutex_lock(&data->death_mutex);
-		if (data->death)
-		{
-			pthread_mutex_unlock(&data->death_mutex);
-			break ;
-		}
-		pthread_mutex_unlock(&data->death_mutex);
-		if (ft_get_time() - date >= time)
-			break ;
-		usleep(100);
+		sign = -1;
+		i++;
 	}
-}
-
-void	*check_simulation(void *arg)
-{
-	t_data	*data;
-	int		all_ate;
-
-	data = (t_data *)arg;
-	while (1)
+	else if (str[i] == '+')
+		i++;
+	while (str[i] >= '0' && str[i] <= '9')
 	{
-		all_ate = 1;
-		if (check_philosopher_status(data, &all_ate))
-			return (NULL);
-		if (check_all_ate(data, all_ate))
-			return (NULL);
+		if (result > (LONG_MAX - (str[i] - '0')) / 10)
+			return -1;
+		result = result * 10 + (str[i] - '0');
+		i++;
 	}
-	return (NULL);
+	return (sign * result);
 }
 
-void	philo_sleep_and_think(t_philo *philo)
+int	is_digit(char c)
 {
-	ft_print_state(philo, "is sleeping");
-	ft_usleep(philo->data->time_to_sleep, philo->data);
-	ft_print_state(philo, "is thinking");
+	if (c < '0' || c > '9')
+		return 0;
+	return 1;
 }
 
-int	check_all_ate(t_data *data, int all_ate)
-{
-	pthread_mutex_lock(&data->death_mutex);
-	if (data->num_times_to_eat != -1 && all_ate)
-	{
-		data->death = 1;
-		data->all_ate = 1;
-		pthread_mutex_unlock(&data->death_mutex);
-		return (1);
-	}
-	pthread_mutex_unlock(&data->death_mutex);
-	return (0);
-}
-
-int	check_philosopher_status(t_data *data, int *all_ate)
+int	is_number(char *av)
 {
 	int	i;
 
 	i = 0;
-	while (i < data->num_of_philos)
+	if (av[i] == '+')
+		i++;
+	while (av[i])
 	{
-		pthread_mutex_lock(&data->meal_mutex);
-		if (ft_get_time() - data->philos[i].last_meal_time >= data->time_to_die)
-		{
-			pthread_mutex_unlock(&data->meal_mutex);
-			pthread_mutex_lock(&data->death_mutex);
-			data->death = 1;
-			pthread_mutex_unlock(&data->death_mutex);
-			pthread_mutex_lock(&data->print_mutex);
-			printf("%lu %d died\n", 
-				ft_get_time() - data->time_start, data->philos[i].id);
-			pthread_mutex_unlock(&data->print_mutex);
-			return (1);
-		}
-		if (data->num_times_to_eat != -1 && 
-			data->philos[i].meals_count < data->num_times_to_eat)
-			*all_ate = 0;
-		pthread_mutex_unlock(&data->meal_mutex);
+		if (!is_digit(av[i]))
+			return 0;
 		i++;
 	}
-	return (0);
+	return 1;
 }
+
+int ft_check_args(int ac, char **av)
+{
+	int	i;
+
+	if (ac != 5 && ac != 6)
+	{
+		printf("Not valid arguments\n");
+		return 0;
+	}
+	i = 1;
+	while (i < ac && i != 5)
+	{
+		if (ft_atoi(av[i]) <= 0 || !is_number(av[i]))
+		{
+			printf("Not valid arguments\n");
+			return 0;
+		}
+		i++;
+	}
+	if (ac == 6)
+	{
+		if (!is_number(av[i]))
+		{
+			printf("Not valid arguments\n");
+			return 0;
+		}
+	}
+	return 1;
+}
+
+long	ft_get_time()
+{
+	struct timeval	time;
+
+	gettimeofday(&time, NULL);
+	return (time.tv_sec * 1000 + time.tv_usec / 1000);
+}
+    
