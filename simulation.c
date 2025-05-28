@@ -6,7 +6,7 @@
 /*   By: ahouass <ahouass@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/20 11:04:47 by ahouass           #+#    #+#             */
-/*   Updated: 2025/05/20 11:25:37 by ahouass          ###   ########.fr       */
+/*   Updated: 2025/05/24 20:25:25 by ahouass          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,7 +60,7 @@ void	*philo_life(void *arg)
 	pthread_mutex_unlock(&philo->data->meal_mutex);
 	ft_print_state(philo, "is thinking");
 	if (philo->id % 2 == 1)
-		usleep(1500);
+		usleep(500);
 	while (1)
 	{
 		pthread_mutex_lock(&philo->data->death_mutex);

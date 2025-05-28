@@ -1,22 +1,34 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
+/*   claude.c                                           :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: ahouass <ahouass@student.42.fr>            +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/05/28 11:15:12 by ahouass           #+#    #+#             */
+/*   Updated: 2025/05/28 11:24:25 by ahouass          ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
 /*   test.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: ahouass <ahouass@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/15 11:06:06 by ahouass           #+#    #+#             */
-/*   Updated: 2025/05/28 11:48:59 by ahouass          ###   ########.fr       */
+/*   Updated: 2025/05/28 11:07:37 by ahouass          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-# include "test.h"
+#include "test.h"
 
 long ft_atoi(const char *str)
 {
 	int i;
 	int sign;
-		long result;
+	long result;
 
 	i = 0;
 	sign = 1;
@@ -110,10 +122,10 @@ void	init_data(t_data *data, int ac, char **av)
 	data->time_to_sleep = ft_atoi(av[4]);
 	data->num_times_to_eat = -1;
 	if (ac == 6)
-			data->num_times_to_eat = ft_atoi(av[5]);
+		data->num_times_to_eat = ft_atoi(av[5]);
 	data->death = 0;
 	data->all_ate = 0;
-	data->time_start = 0;
+	data->time_start = ft_get_time();
 }
 
 int	init_philo(t_philo **philo, t_data *data, int ac)
@@ -129,8 +141,7 @@ int	init_philo(t_philo **philo, t_data *data, int ac)
 		(*philo)[i].id = i + 1;
 		(*philo)[i].meals_count = 0;
 		(*philo)[i].data = data;
-		(*philo)[i].last_meal_time = 0;
-		// (*philo)[i].last_meal_time = ft_get_time();
+		(*philo)[i].last_meal_time = data->time_start;
 		i++;
 	}
 	data->philos = *philo;
@@ -147,17 +158,31 @@ int	death_getter(t_data *data)
 	return (death);
 }
 
-
+// OPTIMIZATION 1: Better precision sleep with adaptive sleep times
 void	ft_usleep(size_t time, t_data *data)
 {
-	long	date;
+	long	start;
+	long	current;
+	long	remaining;
 
-	date = ft_get_time() + time;
-	while (ft_get_time() < date)
+	start = ft_get_time();
+	while (1)
 	{
+		current = ft_get_time();
+		remaining = time - (current - start);
+		
+		if (remaining <= 0)
+			break;
 		if (death_getter(data))
-			break ;
-		usleep(100);
+			break;
+		
+		// Adaptive sleep: larger sleeps for longer waits, smaller for precision
+		if (remaining > 10)
+			usleep(1000);  // 1ms
+		else if (remaining > 1)
+			usleep(100);   // 100us
+		else
+			usleep(10);    // 10us for final precision
 	}
 }
 
@@ -169,28 +194,49 @@ void	ft_print_state(t_philo *philo, char *str)
 	pthread_mutex_unlock(&philo->data->print_mutex);
 }
 
+// OPTIMIZATION 2: Better fork order to prevent deadlock without delays
+void	take_forks(t_philo *philo)
+{
+	pthread_mutex_t *first_fork;
+	pthread_mutex_t *second_fork;
+	
+	// Always take lower numbered fork first to prevent deadlock
+	if (philo->id % 2 == 1)
+	{
+		first_fork = philo->left_fork;
+		second_fork = philo->right_fork;
+	}
+	else
+	{
+		first_fork = philo->right_fork;
+		second_fork = philo->left_fork;
+	}
+	
+	pthread_mutex_lock(first_fork);
+	ft_print_state(philo, "has taken a fork");
+	pthread_mutex_lock(second_fork);
+	ft_print_state(philo, "has taken a fork");
+}
+
+void	release_forks(t_philo *philo)
+{
+	pthread_mutex_unlock(philo->left_fork);
+	pthread_mutex_unlock(philo->right_fork);
+}
+
 void	*philo_life(void *arg)
 {
 	t_philo	*philo;
-	
+
 	philo = (t_philo *)arg;
-	
-	pthread_mutex_lock(&philo->data->meal_mutex);
-	philo->last_meal_time = ft_get_time();
-	pthread_mutex_unlock(&philo->data->meal_mutex);
-	
 	ft_print_state(philo, "is thinking");
-	
+
 	if (philo->id % 2 == 1)
-			usleep((philo->data->time_to_eat / 2) * 1000);
-	while (1)
+		usleep(500);
+	
+	while (!death_getter(philo->data))
 	{
-		if (death_getter(philo->data))
-			break ;
-		pthread_mutex_lock(philo->left_fork);
-		ft_print_state(philo, "has taken a fork");
-		pthread_mutex_lock(philo->right_fork);
-		ft_print_state(philo, "has taken a fork");
+		take_forks(philo);
 
 		pthread_mutex_lock(&philo->data->meal_mutex);
 		philo->last_meal_time = ft_get_time();
@@ -203,11 +249,16 @@ void	*philo_life(void *arg)
 		philo->meals_count++;
 		pthread_mutex_unlock(&philo->data->meal_mutex);
 
-		pthread_mutex_unlock(philo->left_fork);
-		pthread_mutex_unlock(philo->right_fork);
+		release_forks(philo);
+		
+		if (death_getter(philo->data))
+			break;
 			
 		ft_print_state(philo, "is sleeping");
 		ft_usleep(philo->data->time_to_sleep, philo->data);
+
+		if (death_getter(philo->data))
+			break;
 
 		ft_print_state(philo, "is thinking");
 	}
@@ -245,26 +296,30 @@ int check_all_ate(t_data *data, int all_ate)
 int check_philosopher_status(t_data *data, int *all_ate)
 {
 	int i = 0;
+	long current_time = ft_get_time();
+	
 	while (i < data->num_of_philos)
 	{
 		pthread_mutex_lock(&data->meal_mutex);
-		if (ft_get_time() - data->philos[i].last_meal_time >= data->time_to_die)
+
+		if (current_time - data->philos[i].last_meal_time >= data->time_to_die)
 		{
 			pthread_mutex_unlock(&data->meal_mutex);
 			pthread_mutex_lock(&data->death_mutex);
 			data->death = 1;
 			pthread_mutex_unlock(&data->death_mutex);
 			pthread_mutex_lock(&data->print_mutex);
-			printf("%lu %d died\n", ft_get_time() - data->time_start, data->philos[i].id);
+			printf("%lu %d died\n", current_time - data->time_start, data->philos[i].id);
 			pthread_mutex_unlock(&data->print_mutex);
 			return 1;
 		}
+
 		if (data->num_times_to_eat != -1 && data->philos[i].meals_count < data->num_times_to_eat)
 			*all_ate = 0;
+		
 		pthread_mutex_unlock(&data->meal_mutex);
 		i++;
 	}
-	usleep(100);
 	return 0;
 }
 
@@ -281,6 +336,10 @@ void	*check_simulation(void *arg)
 			return NULL;
 		if (check_all_ate(data, all_ate))
 			return NULL;
+		if (data->time_to_die > 100)
+			usleep(1000);
+		else
+			usleep(500);
 	}
 	return NULL;
 }
@@ -288,17 +347,17 @@ void	*check_simulation(void *arg)
 void	init_threads(t_data *data, t_philo *philo, pthread_t *monitor)
 {
 	int	i;
+	long start_time = ft_get_time();
 	
 	i = 0;
-	data->time_start = ft_get_time();
 	while (i < data->num_of_philos)
 	{
-		// philo[i].last_meal_time = ft_get_time();
+		philo[i].last_meal_time = start_time;
 		pthread_create(&philo[i].thread, NULL, philo_life, &philo[i]);
 		i++;
-		// usleep(10);
 	}
 	pthread_create(monitor, NULL, check_simulation, data);
+	
 	i = 0;
 	while (i < data->num_of_philos)
 	{
@@ -319,6 +378,7 @@ int	init_mutexes(t_data *data, t_philo *philo, pthread_t *monitor)
 	pthread_mutex_init(&data->death_mutex, NULL);
 	pthread_mutex_init(&data->print_mutex, NULL);
 	pthread_mutex_init(&data->meal_mutex, NULL);
+	
 	if (data->num_of_philos == 1)
 	{
 		pthread_mutex_init(&data->forks[i], NULL);
@@ -327,6 +387,7 @@ int	init_mutexes(t_data *data, t_philo *philo, pthread_t *monitor)
 		pthread_join(philo[i].thread, NULL);
 		return 1;
 	}
+	
 	while (i < data->num_of_philos)
 	{
 		pthread_mutex_init(&data->forks[i], NULL);
@@ -370,5 +431,7 @@ int main(int ac, char **av)
 	if(!init_mutexes(&data, philo, &monitor))
 		return (1);
 	destroy_mutexes(&data);
+	free(data.forks);
+	free(philo);
 	return 0;
 }

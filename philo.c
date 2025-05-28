@@ -6,7 +6,7 @@
 /*   By: ahouass <ahouass@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/15 11:06:06 by ahouass           #+#    #+#             */
-/*   Updated: 2025/05/20 11:27:20 by ahouass          ###   ########.fr       */
+/*   Updated: 2025/05/24 18:52:47 by ahouass          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,5 +56,7 @@ int	main(int ac, char **av)
 	if (!init_mutexes(&data, philo, &monitor))
 		return (1);
 	destroy_mutexes(&data);
+	free(philo);
+	free(data.forks);
 	return (0);
 }
