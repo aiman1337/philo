@@ -6,22 +6,21 @@
 /*   By: ahouass <ahouass@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/28 22:18:14 by ahouass           #+#    #+#             */
-/*   Updated: 2025/05/28 22:19:07 by ahouass          ###   ########.fr       */
+/*   Updated: 2025/05/29 16:28:47 by ahouass          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-# include "philo.h"
+#include "philo.h"
 
-long ft_atoi(const char *str)
+long	ft_atoi(const char *str)
 {
-	int i;
-	int sign;
-		long result;
+	int		i;
+	int		sign;
+	long	result;
 
 	i = 0;
 	sign = 1;
 	result = 0;
-
 	while (str[i] == ' ' || (str[i] >= 9 && str[i] <= 13))
 		i++;
 	if (str[i] == '-')
@@ -34,7 +33,7 @@ long ft_atoi(const char *str)
 	while (str[i] >= '0' && str[i] <= '9')
 	{
 		if (result > (LONG_MAX - (str[i] - '0')) / 10)
-			return -1;
+			return (-1);
 		result = result * 10 + (str[i] - '0');
 		i++;
 	}
@@ -44,8 +43,8 @@ long ft_atoi(const char *str)
 int	is_digit(char c)
 {
 	if (c < '0' || c > '9')
-		return 0;
-	return 1;
+		return (0);
+	return (1);
 }
 
 int	is_number(char *av)
@@ -58,20 +57,30 @@ int	is_number(char *av)
 	while (av[i])
 	{
 		if (!is_digit(av[i]))
-			return 0;
+			return (0);
 		i++;
 	}
-	return 1;
+	return (1);
 }
 
-int ft_check_args(int ac, char **av)
+int	ft_check_optional_parameter(int ac, char **av)
+{
+	if (ac == 6)
+	{
+		if (!is_number(av[5]))
+			return (0);
+	}
+	return (1);
+}
+
+int	ft_check_args(int ac, char **av)
 {
 	int	i;
 
 	if (ac != 5 && ac != 6)
 	{
 		printf("Not valid arguments\n");
-		return 0;
+		return (0);
 	}
 	i = 1;
 	while (i < ac && i != 5)
@@ -79,26 +88,14 @@ int ft_check_args(int ac, char **av)
 		if (ft_atoi(av[i]) <= 0 || !is_number(av[i]))
 		{
 			printf("Not valid arguments\n");
-			return 0;
+			return (0);
 		}
 		i++;
 	}
-	if (ac == 6)
+	if (!ft_check_optional_parameter(ac, av))
 	{
-		if (!is_number(av[i]))
-		{
-			printf("Not valid arguments\n");
-			return 0;
-		}
+		printf("Not valid arguments\n");
+		return (0);
 	}
-	return 1;
+	return (1);
 }
-
-long	ft_get_time()
-{
-	struct timeval	time;
-
-	gettimeofday(&time, NULL);
-	return (time.tv_sec * 1000 + time.tv_usec / 1000);
-}
-    
